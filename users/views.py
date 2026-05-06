@@ -1,0 +1,59 @@
+from django.shortcuts import render
+
+# Create your views here.
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .models import User
+from .serializers import UserSerializer
+
+@api_view(['POST'])
+def create_user(request):
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=400)
+
+
+@api_view(['GET'])
+def list_users(request):
+    users = User.objects.all()
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def get_user(request, pk):
+    try:
+        user = User.objects.get(id=pk)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
+
+    serializer = UserSerializer(user)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+def add_points(request, pk):
+    try:
+        user = User.objects.get(id=pk)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
+
+    # 儲值只有會員限定
+    if user.role != 'member':
+        return Response({"error": "Only members can deposit"}, status=403)
+
+    amount = request.data.get("amount", 0)
+
+    if amount <= 0:
+        return Response({"error": "Invalid amount"}, status=400)
+
+    user.points += int(amount)
+    user.save()
+
+    return Response({
+        "message": "Points added",
+        "user": UserSerializer(user).data
+    })
