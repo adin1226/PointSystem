@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}註冊{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+  <div class="col-md-4">
+
+    <h3 class="mb-3">會員註冊</h3>
+
+    <form id="registerForm">
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label>帳號</label>
+        <input type="text" name="username" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label>密碼</label>
+        <input type="password" name="password" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label>身份</label>
+        <select name="role" class="form-control">
+          <option value="member">會員</option>
+          <option value="merchant">店家</option>
+        </select>
+      </div>
+
+      <button class="btn btn-success w-100">註冊</button>
+    </form>
+
+  </div>
+</div>
+
+<script>
+document.getElementById("registerForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const username = document.querySelector("[name='username']").value;
+    const password = document.querySelector("[name='password']").value;
+    const role = document.querySelector("[name='role']").value;
+
+    const res = await fetch("/api/register/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            username,
+            password,
+            role
+        })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        alert("註冊成功，請登入");
+        window.location.href = "/api/login-page/";
+    } else {
+        alert("註冊失敗：" + JSON.stringify(data));
+    }
+});
+</script>
+
+{% endblock %}

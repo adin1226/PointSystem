@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}商品列表{% endblock %}
+
+{% block content %}
+
+<h2 class="mb-4">商品列表</h2>
+
+<div class="row">
+
+  {% for product in products %}
+  <div class="col-md-4 mb-4">
+
+    <div class="card h-100 shadow-sm">
+
+      {% if product.image %}
+      <img src="{{ product.image.url }}" class="card-img-top">
+      {% endif %}
+      <img src="{% static 'images/blow.jpg' %}" class="card-img-top">
+
+      <div class="card-body">
+        <h5 class="card-title">{{ product.name }}</h5>
+
+        <p class="card-text">
+          需要點數：<strong>{{ product.points_required }}</strong>
+        </p>
+
+        <button class="btn btn-outline-primary w-100" onclick="exchangeProduct({{ product.id }})">
+          我要兌換
+        </button >
+
+      </div>
+    </div>
+
+  </div>
+  {% endfor %}
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const token = localStorage.getItem("access");
+    
+    if (!token) {
+        alert("請先登入");
+        window.location.href = "/api/login-page/";
+    }
+});
+
+function exchangeProduct(productId) {
+
+    const token = localStorage.getItem("access");
+
+    if (!token) {
+        alert("請先登入");
+        window.location.href = "/api/login-page/";
+        return;
+    }
+
+    fetch("/api/exchange/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+            product_id: productId
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (!data.error) {
+            alert(`兌換成功，剩餘點數：${data.remaining_points}`);
+            location.reload();
+        } else {
+            alert(data.error);
+        }
+
+    })
+    .catch(err => {
+        console.error(err);
+        alert("系統錯誤");
+    });
+}
+</script>
+{% endblock %}

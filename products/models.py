@@ -6,13 +6,7 @@ class Product(models.Model):
     name = models.CharField(max_length=100)
     points_required = models.IntegerField()
     stock = models.IntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    merchant = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        limit_choices_to={'role': 'merchant'}
-    )
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     
     def __str__(self):
         return self.name

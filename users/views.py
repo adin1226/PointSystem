@@ -1,11 +1,37 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 # Create your views here.
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import status
+from rest_framework import generics
 from .models import User
+from .serializers import RegisterSerializer
 from .serializers import UserSerializer
+from .serializers import CustomTokenSerializer
+from django.shortcuts import render
+from products.models import Product
+
+class CustomTokenView(TokenObtainPairView):
+    serializer_class = CustomTokenSerializer
+    
+class RegisterView(generics.CreateAPIView):
+    serializer_class = RegisterSerializer
+
+def product_list(request):
+    # if not request.user.is_authenticated:
+    #     return redirect('/api/login-page/')
+
+    products = Product.objects.all()
+    return render(request, 'product_list.html', {'products': products})
+
+def login_page(request):
+    return render(request, "login.html")
+
+def register_page(request):
+    return render(request, "register.html")
 
 @api_view(['POST'])
 def create_user(request):
@@ -35,17 +61,19 @@ def get_user(request, pk):
 
 
 @api_view(['POST'])
-def add_points(request, pk):
-    try:
-        user = User.objects.get(id=pk)
-    except User.DoesNotExist:
-        return Response({"error": "User not found"}, status=404)
+@permission_classes([IsAuthenticated]) 
+def add_points(request):
+    # try:
+    #     user = User.objects.get(id=pk)
+    # except User.DoesNotExist:
+    #     return Response({"error": "User not found"}, status=404)
+    user = request.user
 
     # 儲值只有會員限定
     if user.role != 'member':
         return Response({"error": "Only members can deposit"}, status=403)
 
-    amount = request.data.get("amount", 0)
+    amount = int(request.data.get("amount", 0))
 
     if amount <= 0:
         return Response({"error": "Invalid amount"}, status=400)
@@ -55,5 +83,5 @@ def add_points(request, pk):
 
     return Response({
         "message": "Points added",
-        "user": UserSerializer(user).data
+        "points": user.points
     })
