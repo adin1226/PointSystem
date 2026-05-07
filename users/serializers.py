@@ -22,10 +22,11 @@ class RegisterSerializer(serializers.ModelSerializer):
             role=validated_data.get('role', 'member')
         )
 
+# 為了要登入拿到role分辨是會員還是店家
 class CustomTokenSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
 
-        data['role'] = self.user.role  # ⭐ 就是你要的
+        data['role'] = self.user.role
 
         return data

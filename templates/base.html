@@ -19,34 +19,17 @@
 
     <div class="collapse navbar-collapse">
       <ul class="navbar-nav ms-auto">
-        <a id="mainNavLink" class="nav-link"></a>
-
-        <!-- <li class="nav-item">
-          <a class="nav-link" href="/api/product-list">商品列表</a>
-        </li> -->
-
-        <li class="nav-item">
-          <a class="nav-link" href="#" onclick="showPointsInfo()">我的點數</a>
+        <li class="nav-item" id="addProductBtn" style="display:none;">
+          <a class="nav-link" href="#" onclick="openProductModal()">刊登商品</a>
         </li>
 
-        <!-- {% if user.is_authenticated %}
-          <li class="nav-item">
-            <a class="nav-link" href="#">Hi, {{ user.username }}</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/logout">我要刊登</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/logout">登出</a>
-          </li>
-        {% else %}
-          <li class="nav-item">
-            <a class="nav-link" href="/api/login-page/">登入</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/api/register-page">註冊</a>
-          </li>
-        {% endif %} -->
+        <li class="nav-item" id="showProductBtn">
+          <a class="nav-link" href="#" onclick="showProductModal()">商品管理</a>
+        </li>
+
+        <li class="nav-item" id="myPoint">
+          <a class="nav-link" href="#" onclick="showPointsInfo()">我的點數</a>
+        </li>
         <ul class="navbar-nav ms-auto" id="nav-user"></ul>
       </ul>
     </div>
@@ -60,9 +43,12 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/products.js' %}"></script>
+<script src="{% static 'js/points.js' %}"></script>
 </body>
 </html>
 
+<!-- 我的點數 -->
 <div class="modal fade" id="pointsModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -105,12 +91,77 @@
   </div>
 </div>
 
+<!-- 我要刊登 -->
+<div class="modal fade" id="productModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">刊登商品</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="mb-3">
+          <label class="form-label">商品名稱</label>
+          <input type="text" id="productName" class="form-control">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">所需點數</label>
+          <input type="number" id="productPoints" class="form-control">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">數量</label>
+          <input type="number" id="productStocks" class="form-control">
+        </div>
+
+        <button class="btn btn-primary w-100" onclick="createProduct()">
+          上架商品
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 商品管理 -->
+<div class="modal fade" id="showProductModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">商品管理</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- 商品列表 -->
+        <div id="productList" class="row"></div>
+
+        <!-- 空狀態 -->
+        <div id="emptyState" class="text-center text-muted mt-3" style="display:none;">
+            尚無商品
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const role = localStorage.getItem("role");
     const token = localStorage.getItem("access");
     const nav = document.getElementById("nav-user");
-    const navLink = document.getElementById("mainNavLink");
 
     if (token) {
         // 已登入
@@ -135,102 +186,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (role === "merchant") {
-        console.log("HI")
-        navLink.innerText = "我要刊登";
-        navLink.href = "/add-product/";
+        document.getElementById("addProductBtn").style.display = "block";
+        document.getElementById("myPoint").style.display = "none";
+        document.getElementById("showProductBtn").style.display = "block";
     } else {
-        navLink.style.display = "none";
+        document.getElementById("addProductBtn").style.display = "none";
+        document.getElementById("myPoint").style.display = "block";
+        document.getElementById("showProductBtn").style.display = "none";
     }
 });
-
-
-function showPointsInfo() {
-
-    const access = localStorage.getItem("access");
-
-    if (!access) {
-        alert("請先登入才能查看點數");
-        return;
-    }
-
-    const points = localStorage.getItem("points") || 0;
-
-    document.getElementById("pointsValue").innerText = points;
-
-    fetch("/api/member_transactions", {
-        method: "GET",
-        headers: {
-            "Authorization": "Bearer " + access
-        }
-    })
-    .then(res => res.json())
-    .then(data => {
-
-        const list = document.getElementById("transactionList");
-        list.innerHTML = "";
-
-        if (data.length === 0) {
-            list.innerHTML = `<li class="list-group-item text-muted">尚無交易紀錄</li>`;
-            return;
-        }
-
-        data.forEach(tx => {
-            const item = document.createElement("li");
-            item.className = "list-group-item";
-
-            item.innerText = `
-                商品: ${tx.product_name || tx.product} 
-                使用點數: ${tx.points_used}
-                時間: ${new Date(tx.created_at).toLocaleString('zh-TW') || ""}
-                            `;
-
-            list.appendChild(item);
-        });
-
-    })
-    .catch(err => {
-        console.error(err);
-    });
-
-    const modal = new bootstrap.Modal(document.getElementById('pointsModal'));
-    modal.show();
-}
-
-async function deposit() {
-    console.log("token:", localStorage.getItem("access"));
-    const token = localStorage.getItem("access");
-
-
-    const amountInput = document.getElementById("depositAmount");
-    const amount = parseInt(amountInput.value);
-
-    // const res = await fetch("/api/users/deposit/", {
-    //     method: "POST",
-    //     headers: {
-    //         "Content-Type": "application/json",
-    //         "Authorization": "Bearer " + token
-    //     },
-    //     body: JSON.stringify({
-    //         amount: amount
-    //     })
-    // });
-
-    const res = await authFetch("/api/users/deposit/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ amount: amount })
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-        alert("儲值成功：" + data.points);
-        document.getElementById("pointsValue").innerText = data.points;
-        amountInput.value = "";
-    } else {
-        alert(data.error);
-    }
-}
 </script>

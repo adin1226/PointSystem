@@ -16,14 +16,11 @@ from products.models import Product
 
 class CustomTokenView(TokenObtainPairView):
     serializer_class = CustomTokenSerializer
-    
+
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
 
 def product_list(request):
-    # if not request.user.is_authenticated:
-    #     return redirect('/api/login-page/')
-
     products = Product.objects.all()
     return render(request, 'product_list.html', {'products': products})
 
@@ -56,6 +53,14 @@ def get_user(request, pk):
     except User.DoesNotExist:
         return Response({"error": "User not found"}, status=404)
 
+    serializer = UserSerializer(user)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_now_user(request):
+    user = request.user
     serializer = UserSerializer(user)
     return Response(serializer.data)
 
