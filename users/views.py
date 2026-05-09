@@ -30,13 +30,13 @@ def login_page(request):
 def register_page(request):
     return render(request, "register.html")
 
-@api_view(['POST'])
-def create_user(request):
-    serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data)
-    return Response(serializer.errors, status=400)
+# @api_view(['POST'])
+# def create_user(request):
+#     serializer = UserSerializer(data=request.data)
+#     if serializer.is_valid():
+#         serializer.save()
+#         return Response(serializer.data)
+#     return Response(serializer.errors, status=400)
 
 
 @api_view(['GET'])

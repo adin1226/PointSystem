@@ -59,6 +59,7 @@ def get_product(request, pk):
 
 
 @api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def update_product(request, pk):
     try:
         product = Product.objects.get(id=pk)
@@ -74,6 +75,7 @@ def update_product(request, pk):
 
 
 @api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def delete_product(request, pk):
     try:
         product = Product.objects.get(id=pk)

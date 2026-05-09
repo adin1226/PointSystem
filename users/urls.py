@@ -15,7 +15,7 @@ urlpatterns = [
     path('refresh/', TokenRefreshView.as_view()),
 
     path('users/', views.list_users),
-    path('users/create/', views.create_user),
+    # path('users/create/', views.create_user),
     path('users/<int:pk>/', views.get_user), # 取得指定ID使用者資訊
     path('users/now/', views.get_now_user), # 取得現在登入的使用者資訊
     path('users/deposit/', views.add_points),
