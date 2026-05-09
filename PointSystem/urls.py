@@ -19,8 +19,10 @@ from django.urls import path
 from django.urls import include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 
 urlpatterns = [
+    path('', RedirectView.as_view(url='/api/login-page/')), # 在網頁直接127.0.0.1:8000就可以直接到/api/login-page此url
     path('admin/', admin.site.urls),
     path('api/', include('users.urls')),
     path('api/', include('products.urls')),
