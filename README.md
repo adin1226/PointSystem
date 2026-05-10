@@ -1,5 +1,7 @@
 # 點數兌換網站DEMO
 
+雲端連結: https://pointsystem-k60w.onrender.com
+
 ## 專案介紹
 
 本專案為一個點數兌換系統，提供會員透過點數兌換商品和店家刊登商品功能。
